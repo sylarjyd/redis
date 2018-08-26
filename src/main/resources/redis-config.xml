@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:redis="http://www.springframework.org/schema/redis"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
+	http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.2..xsd
+    http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.2.xsd
+    http://www.springframework.org/schema/context  http://www.springframework.org/schema/context/spring-context-4.2.xsd
+     http://www.springframework.org/schema/redis http://www.springframework.org/schema/redis/spring-redis-1.0.xsd"
+	default-autowire="byName" default-lazy-init="true">
+
+	<!-- redis连接配置 -->
+	<bean id="poolConfig" class="redis.clients.jedis.JedisPoolConfig">
+		<property name="maxIdle" value="${redis.maxIdle}" />
+		<property name="maxWaitMillis" value="${redis.maxWait}" />
+		<property name="testOnBorrow" value="${redis.testOnBorrow}" />
+	</bean>
+
+	<!-- redis服务器中心 -->
+	<bean id="connectionFactory"
+		class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
+		<property name="poolConfig" ref="poolConfig" />
+		<property name="hostName" value="${redis.host}" />
+		<property name="port" value="${redis.port}" />
+		<property name="password" value="${redis.password}" />
+		<property name="timeout" value="${redis.timeout}"></property>
+	</bean>
+
+	<bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate">
+		<property name="connectionFactory" ref="connectionFactory" />
+		<property name="keySerializer">
+			<bean
+				class="org.springframework.data.redis.serializer.StringRedisSerializer" />
+		</property>
+		<property name="valueSerializer">
+			<bean
+				class="org.springframework.data.redis.serializer.JdkSerializationRedisSerializer" />
+		</property>
+	</bean>
+
+	<bean id="redisUtil" class="cn.jyd.test.RedisUtil">
+		<property name="redisTemplate" ref="redisTemplate" />
+	</bean>
+
+<!-- 	<bean id="stringRedisSerializer" -->
+<!-- 		class="org.springframework.data.redis.serializer.StringRedisSerializer" /> -->
+	<!--此处注册监听器,需要指定通道名称(topic)(可以使用正则表达式*_等等),第一种为实现MessageListener接口的监听器的注册,第二种为自己定义的类的注册需要制定处理方法名称(不制定的默认方法为handleMessage,如果你的方法是这个名称可以不指定)与序列化的方式,推荐使用第一种方式 -->
+<!-- 	<redis:listener-container> -->
+<!-- 		<redis:listener ref="redisMessageListener" topic="talk" /> -->
+<!-- 		<redis:listener ref="eventListener" topic="talk*" -->
+<!-- 			method="getMessage" serializer="stringRedisSerializer"></redis:listener> -->
+<!-- 	</redis:listener-container> -->
+
+</beans>
